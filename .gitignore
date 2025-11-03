@@ -1,0 +1,45 @@
+cat > .gitignore << 'EOF'
+__pycache__/
+*.py[cod]
+*.so
+.env
+.venv/
+venv/
+env/
+*.env
+.ipynb_checkpoints/
+data/
+datasets/
+.DS_Store
+*.ckpt
+*.pth
+*.pt
+*.npz
+*.onnx
+checkpoints/
+logs/
+wandb/
+results/raw/
+results/figs/
+outputs/
+runs/
+*.log
+*.csv
+build/
+dist/
+*.egg-info/
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.prof
+*.profile
+*.trace
+tmp/
+*.tmp
+EOF
+
+mkdir -p data results/raw results/figs
+echo "Put or symlink dataset here" > data/README.md
+echo "Auto-generated CSVs land here" > results/raw/README.md
+echo "Auto-generated plots land here" > results/figs/README.md
