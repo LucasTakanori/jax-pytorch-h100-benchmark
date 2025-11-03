@@ -1,0 +1,8 @@
+numpy
+pandas
+matplotlib
+psutil
+torch              # Uses CPU or Metal automatically on macOS
+torchvision
+jax[cpu]           # Safe CPU-only JAX (CUDA can be added later)
+flax               # For JAX models (ResNet, ViT later)
