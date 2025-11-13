@@ -1,8 +1,26 @@
+# Core dependencies
 numpy
 pandas
 matplotlib
 psutil
-torch              # Uses CPU or Metal automatically on macOS
+
+# PyTorch - automatically uses CPU, CUDA, or MPS based on system
+torch
 torchvision
-jax[cpu]           # Safe CPU-only JAX (CUDA can be added later)
-flax               # For JAX models (ResNet, ViT later)
+
+# JAX - CPU version (safe default, works everywhere)
+# For CUDA support on H100/other NVIDIA GPUs, install separately:
+#   pip install "jax[cuda12]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+#   OR for CUDA 11: pip install "jax[cuda11_local]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+# For TPU support, install on TPU VM:
+#   pip install "jax[tpu]" -f https://storage.googleapis.com/jax-releases/jax_tpu_releases.html
+jax[cpu]
+flax
+
+# Optional: GPU monitoring tools (for energy measurement on NVIDIA GPUs)
+# Install only if you have NVIDIA GPUs and want energy profiling:
+#   pip install nvidia-ml-py3
+# nvidia-ml-py3  # Uncomment if using NVIDIA GPUs
+
+# Optional: For better profiling and visualization
+# tensorboard  # Uncomment if you want TensorBoard integration
