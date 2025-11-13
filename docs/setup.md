@@ -148,6 +148,62 @@ This will check:
 - Device detection utilities
 - Basic functionality tests
 
+**Expected Output (macOS with Apple Silicon):**
+```
+============================================================
+594Project Setup Verification
+============================================================
+
+Checking core dependencies...
+------------------------------------------------------------
+✅ NumPy installed
+✅ Pandas installed
+✅ Matplotlib installed
+✅ psutil installed
+
+Checking PyTorch...
+------------------------------------------------------------
+✅ PyTorch installed
+  Version: 2.9.0
+  ⚠️  CUDA not available (expected on macOS/CPU-only systems)
+  ✅ MPS (Apple Silicon GPU) available
+  ✅ CPU backend available
+
+Checking JAX...
+------------------------------------------------------------
+✅ JAX installed
+  Version: 0.8.0
+  Available devices: 1
+  ✅ CPU: 1 device(s)
+    - TFRT_CPU_0
+  ✅ XLA compilation working
+
+Checking Flax...
+------------------------------------------------------------
+✅ Flax installed
+  Version: 0.12.0
+
+Testing device detection utilities...
+------------------------------------------------------------
+✅ Device utilities module loaded
+
+PyTorch Device Detection:
+  Device: Apple Silicon GPU (Metal)
+  Type: MPS
+  Available: True
+  ✅ PyTorch device detection working
+
+JAX Device Detection:
+  Device: CPU
+  Type: CPU
+  Available: True
+  ✅ JAX device detection working
+
+============================================================
+✅ All checks passed! Your environment is ready.
+============================================================
+```
+
 ### Test Benchmarks
 
 Run the existing benchmark scripts:
@@ -161,6 +217,45 @@ python bench/bench_infer_jax.py
 ```
 
 Both should run successfully and print latency measurements.
+
+**Expected PyTorch Benchmark Output:**
+```
+============================================================
+PyTorch Inference Benchmark
+============================================================
+Device: Apple Silicon GPU (Metal)
+  Type: MPS
+  Available: True
+
+Warming up...
+Running benchmark (20 iterations)...
+============================================================
+✅ ResNet18 ran successfully!
+Avg Latency/Batch: 0.0149s
+Throughput: 1076.83 images/sec
+============================================================
+```
+
+**Expected JAX Benchmark Output:**
+```
+============================================================
+JAX + Flax Inference Benchmark
+============================================================
+Device: CPU
+  Type: CPU
+  Available: True
+
+Warming up (JIT compilation)...
+Running benchmark (20 iterations)...
+============================================================
+✅ JAX + Flax working!
+Median Latency: 0.0087s
+Mean Latency: 0.0088s
+Throughput: 1810.73 images/sec
+============================================================
+```
+
+**Note:** On H100 systems, you should see CUDA devices detected instead of MPS, and JAX should detect GPU devices instead of CPU.
 
 ## Troubleshooting
 

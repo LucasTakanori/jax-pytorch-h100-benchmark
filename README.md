@@ -38,6 +38,8 @@ This project benchmarks and compares PyTorch and JAX performance across differen
 
 ### Documentation
 
+- **[Project Overview](docs/project_overview.md)** - Research question, scope, and quick reference
+- **[Project Phases](docs/phases.md)** - Detailed breakdown of all 5 project phases, objectives, deliverables, and timeline
 - **[Setup Guide](docs/setup.md)** - Complete setup instructions for local (macOS) and remote (H100) systems
 - **[TPU Setup Guide](docs/tpu_setup.md)** - Instructions for obtaining and setting up Google Cloud TPU access
 
@@ -64,13 +66,17 @@ This project benchmarks and compares PyTorch and JAX performance across differen
 - Prathyush B. (pball5@uic.edu)
 - Sai M. (sbadr4@uic.edu)
 
-## Status
+## Project Status
 
-- ✅ Phase 1: Setup (Complete)
-- 🚧 Phase 2: Implementation & Infrastructure (In Progress)
-- ⏳ Phase 3: Data Collection
-- ⏳ Phase 4: Analysis & Documentation
-- ⏳ Phase 5: Finalization
+- ✅ **Phase 1: Setup** (Complete) - Device detection, verification scripts, documentation
+- 🚧 **Phase 2: Implementation & Infrastructure** (In Progress - Shashwat S.) - Model implementations, benchmarking infrastructure
+- ⏳ **Phase 3: Data Collection** (Pending - Team) - Comprehensive benchmarking across all configurations
+- ⏳ **Phase 4: Analysis & Documentation** (Pending - Team) - Performance analysis, visualizations, report writing
+- ⏳ **Phase 5: Finalization** (Pending - Team) - Code cleanup, presentation, repository finalization
+
+**Note**: Phases are sequential. Phase 2 is currently in progress. Phases 3-4 will be handled by the team.
+
+See [Project Phases](docs/phases.md) for detailed phase breakdown, objectives, and deliverables.
 
 ## Contributing
 
