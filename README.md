@@ -42,6 +42,8 @@ This project benchmarks and compares PyTorch and JAX performance across differen
 - **[Project Phases](docs/phases.md)** - Detailed breakdown of all 5 project phases, objectives, deliverables, and timeline
 - **[Setup Guide](docs/setup.md)** - Complete setup instructions for local (macOS) and remote (H100) systems
 - **[TPU Setup Guide](docs/tpu_setup.md)** - Instructions for obtaining and setting up Google Cloud TPU access
+- **[Models Documentation](docs/models.md)** - Model implementations guide (ResNet-50, ViT-Base)
+- **[Benchmarking Guide](docs/benchmarking.md)** - How to use the benchmarking infrastructure
 
 ## Project Structure
 
@@ -50,7 +52,7 @@ This project benchmarks and compares PyTorch and JAX performance across differen
 ├── bench/              # Benchmark scripts
 │   ├── bench_infer_torch.py
 │   ├── bench_infer_jax.py
-│   └── runner.py       # Unified benchmark runner (Phase 2 - in progress)
+│   └── runner.py       # Unified benchmark runner ✅
 ├── models/             # Model implementations
 │   ├── __init__.py
 │   ├── torch_zoo.py   # PyTorch models (ResNet-50, ViT-Base) ✅
@@ -61,7 +63,7 @@ This project benchmarks and compares PyTorch and JAX performance across differen
 │   ├── memory.py       # Memory profiling ✅
 │   ├── logging.py     # CSV result logging ✅
 │   ├── data.py        # Data loading ✅
-│   └── validation.py  # Numerical validation (Phase 2 - in progress)
+│   └── validation.py  # Numerical validation ✅
 ├── scripts/            # Helper scripts
 │   └── verify_setup.py # Setup verification ✅
 ├── data/               # Dataset storage (ImageNet-100)
@@ -74,19 +76,19 @@ This project benchmarks and compares PyTorch and JAX performance across differen
 ## Team Members
 
 - Sanchez Shiromizu L.T. (lsanc68@uic.edu)
-- Shashwat S. (ssinha30@uic.edu)
+- Shashwat S. (ssinha30@uic.edu) - **Phase 1 & 2 Primary Contributor**
 - Prathyush B. (pball5@uic.edu)
 - Sai M. (sbadr4@uic.edu)
 
 ## Project Status
 
-- ✅ **Phase 1: Setup** (Complete) - Device detection, verification scripts, documentation
-- 🚧 **Phase 2: Implementation & Infrastructure** (In Progress - Shashwat S.) - Model implementations, benchmarking infrastructure
+- ✅ **Phase 1: Setup** (Complete - Shashwat S.) - Device detection, verification scripts, documentation. **Sole contributor: Shashwat S.**
+- ✅ **Phase 2: Implementation & Infrastructure** (Complete - Shashwat S.) - Model implementations, benchmarking infrastructure. **Sole contributor: Shashwat S.**
 - ⏳ **Phase 3: Data Collection** (Pending - Team) - Comprehensive benchmarking across all configurations
 - ⏳ **Phase 4: Analysis & Documentation** (Pending - Team) - Performance analysis, visualizations, report writing
 - ⏳ **Phase 5: Finalization** (Pending - Team) - Code cleanup, presentation, repository finalization
 
-**Note**: Phases are sequential. Phase 2 is currently in progress. Phases 3-4 will be handled by the team.
+**Note**: Phases are sequential. Phases 1-2 were completed solely by Shashwat S. Phases 3-4 will be handled by the team.
 
 See [Project Phases](docs/phases.md) for detailed phase breakdown, objectives, and deliverables.
 

@@ -52,7 +52,7 @@ This project provides a systematic evaluation of JAX and PyTorch performance, fo
 ├── bench/              # Benchmark scripts
 │   ├── bench_infer_torch.py
 │   ├── bench_infer_jax.py
-│   └── runner.py       # Unified benchmark runner (Phase 2)
+│   └── runner.py       # Unified benchmark runner ✅
 ├── models/             # Model implementations
 │   ├── __init__.py
 │   ├── torch_zoo.py    # PyTorch models (ResNet-50, ViT-Base) ✅
@@ -63,7 +63,7 @@ This project provides a systematic evaluation of JAX and PyTorch performance, fo
 │   ├── memory.py       # Memory profiling (Phase 2) ✅
 │   ├── logging.py      # CSV logging (Phase 2) ✅
 │   ├── data.py         # Data loading (Phase 2) ✅
-│   └── validation.py   # Numerical validation (Phase 2 - in progress)
+│   └── validation.py   # Numerical validation ✅
 ├── scripts/
 │   └── verify_setup.py # Setup verification (Phase 1) ✅
 ├── data/
@@ -82,22 +82,22 @@ This project provides a systematic evaluation of JAX and PyTorch performance, fo
 
 | Phase | Status | Primary Contributor |
 |-------|--------|---------------------|
-| **Phase 1: Setup** | ✅ Complete | Shashwat S. |
-| **Phase 2: Implementation** | 🚧 In Progress | Shashwat S. |
+| **Phase 1: Setup** | ✅ Complete | Shashwat S. (Sole contributor) |
+| **Phase 2: Implementation** | ✅ Complete | Shashwat S. (Sole contributor) |
 | **Phase 3: Data Collection** | ⏳ Pending | Team (all members) |
 | **Phase 4: Analysis** | ⏳ Pending | Team (all members) |
 | **Phase 5: Finalization** | ⏳ Pending | Team (all members) |
 
-**Note**: Phases are sequential. Phase 2 is currently in progress. Phases 3-4 will be handled by the team.
+**Note**: Phases are sequential. Phases 1-2 were completed solely by Shashwat S. Phases 3-4 will be handled by the team.
 
 **Phase 1 Verification**: Phase 1 completion was verified with successful test runs. See [Project Phases](phases.md#verification-results) for detailed verification outputs showing all checks passed and benchmarks running successfully.
 
 ## Team Members
 
-- **Sanchez Shiromizu L.T.** (lsanc68@uic.edu) - JAX implementations
-- **Shashwat S.** (ssinha30@uic.edu) - PyTorch baselines
-- **Prathyush B.** (pball5@uic.edu) - Benchmarking infrastructure
-- **Sai M.** (sbadr4@uic.edu) - Analysis and visualization
+- **Sanchez Shiromizu L.T.** (lsanc68@uic.edu)
+- **Shashwat S.** (ssinha30@uic.edu) - **Phase 1 & 2 Primary Contributor** (Setup, Implementation & Infrastructure)
+- **Prathyush B.** (pball5@uic.edu)
+- **Sai M.** (sbadr4@uic.edu)
 
 ## Resources
 
@@ -137,8 +137,8 @@ This project provides a systematic evaluation of JAX and PyTorch performance, fo
 
 ## Next Steps
 
-1. **Current**: Complete Phase 2 - Model implementations and benchmarking infrastructure (Shashwat S.)
-2. **After Phase 2**: Team will begin Phase 3 - Comprehensive data collection on H100
+1. **Current**: Phase 2 complete ✅ - Ready for Phase 3
+2. **Next**: Team will begin Phase 3 - Comprehensive data collection on H100
 3. **After Phase 3**: Team will begin Phase 4 - Analysis, visualization, and report writing
 4. **After Phase 4**: Team will begin Phase 5 - Finalization and presentation
 

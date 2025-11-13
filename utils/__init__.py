@@ -40,6 +40,13 @@ from .data import (
     create_dataloader,
 )
 
+from .validation import (
+    compare_outputs,
+    validate_forward_pass,
+    validate_model_architecture,
+    compare_models,
+)
+
 __all__ = [
     # Device utilities
     'get_torch_device',
@@ -69,5 +76,10 @@ __all__ = [
     'get_preprocessing',
     'load_imagenet100',
     'create_dataloader',
+    # Validation utilities
+    'compare_outputs',
+    'validate_forward_pass',
+    'validate_model_architecture',
+    'compare_models',
 ]
 
