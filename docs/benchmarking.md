@@ -2,6 +2,38 @@
 
 This guide explains how to use the benchmarking infrastructure in 594Project.
 
+## Verification
+
+The benchmark runner has been tested and verified working. Example output:
+
+```bash
+$ python bench/runner.py --framework pytorch --model resnet50 --batch-sizes 1 4 --iterations 10 --warmup 3
+============================================================
+PyTorch Benchmark: resnet50
+============================================================
+Device: Apple Silicon GPU (Metal)
+  Type: MPS
+  Available: True
+
+Benchmarking batch size: 1
+  Latency (p50): 5.476ms
+  Throughput: 182.39 images/sec
+  Memory: 103.06 MB
+
+Benchmarking batch size: 4
+  Latency (p50): 12.174ms
+  Throughput: 328.16 images/sec
+  Memory: 105.67 MB
+
+============================================================
+Benchmark Suite Complete
+============================================================
+Total configurations: 2
+Results saved to: results/raw/benchmark_results_20251113_134337.csv
+```
+
+**Verification:** ✅ Benchmark runner successfully executes, collects metrics, and logs results to CSV.
+
 ## Quick Start
 
 ### Using the Command-Line Interface

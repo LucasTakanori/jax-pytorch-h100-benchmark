@@ -44,6 +44,7 @@ This project benchmarks and compares PyTorch and JAX performance across differen
 - **[TPU Setup Guide](docs/tpu_setup.md)** - Instructions for obtaining and setting up Google Cloud TPU access
 - **[Models Documentation](docs/models.md)** - Model implementations guide (ResNet-50, ViT-Base)
 - **[Benchmarking Guide](docs/benchmarking.md)** - How to use the benchmarking infrastructure
+- **[Validation Guide](docs/validation.md)** - Numerical validation framework and results
 
 ## Project Structure
 
