@@ -48,15 +48,27 @@ This project benchmarks and compares PyTorch and JAX performance across differen
 ```
 594Project/
 ├── bench/              # Benchmark scripts
-├── models/             # Model implementations (ResNet, ViT)
-├── utils/              # Utilities (device detection, timing, logging)
-├── scripts/             # Helper scripts (setup verification)
+│   ├── bench_infer_torch.py
+│   ├── bench_infer_jax.py
+│   └── runner.py       # Unified benchmark runner (Phase 2 - in progress)
+├── models/             # Model implementations
+│   ├── __init__.py
+│   ├── torch_zoo.py   # PyTorch models (ResNet-50, ViT-Base) ✅
+│   └── jax_flax_zoo.py # JAX/Flax models (ResNet-50, ViT-Base) ✅
+├── utils/              # Utilities
+│   ├── device.py       # Device detection ✅
+│   ├── timing.py      # Latency statistics ✅
+│   ├── memory.py       # Memory profiling ✅
+│   ├── logging.py     # CSV result logging ✅
+│   ├── data.py        # Data loading ✅
+│   └── validation.py  # Numerical validation (Phase 2 - in progress)
+├── scripts/            # Helper scripts
+│   └── verify_setup.py # Setup verification ✅
 ├── data/               # Dataset storage (ImageNet-100)
 ├── results/             # Benchmark results
 │   ├── raw/            # CSV logs
 │   └── figs/           # Plots and visualizations
-├── docs/               # Documentation
-└── tests/              # Unit tests
+└── docs/               # Documentation
 ```
 
 ## Team Members

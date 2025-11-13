@@ -12,7 +12,36 @@ from .device import (
     DeviceInfo,
 )
 
+from .timing import (
+    LatencyStats,
+    synchronize,
+    calculate_throughput,
+    measure_latency,
+    measure_compilation_time,
+)
+
+from .memory import (
+    MemoryTracker,
+    get_current_memory,
+    get_peak_memory,
+    reset_memory_stats,
+    track_memory,
+)
+
+from .logging import (
+    BenchmarkLogger,
+    create_result_dict,
+)
+
+from .data import (
+    get_synthetic_batch,
+    get_preprocessing,
+    load_imagenet100,
+    create_dataloader,
+)
+
 __all__ = [
+    # Device utilities
     'get_torch_device',
     'get_jax_device',
     'synchronize_torch',
@@ -20,5 +49,25 @@ __all__ = [
     'print_device_info',
     'detect_all_devices',
     'DeviceInfo',
+    # Timing utilities
+    'LatencyStats',
+    'synchronize',
+    'calculate_throughput',
+    'measure_latency',
+    'measure_compilation_time',
+    # Memory utilities
+    'MemoryTracker',
+    'get_current_memory',
+    'get_peak_memory',
+    'reset_memory_stats',
+    'track_memory',
+    # Logging utilities
+    'BenchmarkLogger',
+    'create_result_dict',
+    # Data utilities
+    'get_synthetic_batch',
+    'get_preprocessing',
+    'load_imagenet100',
+    'create_dataloader',
 ]
 

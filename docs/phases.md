@@ -243,18 +243,18 @@ Throughput: 1810.73 images/sec
 
 ### Tasks to Complete
 
-- [ ] Implement JAX/Flax ResNet-50
-- [ ] Implement JAX/Flax ViT-Base
-- [ ] Implement PyTorch ResNet-50 (or use torchvision)
-- [ ] Implement PyTorch ViT-Base (or use torchvision)
+- [x] Implement JAX/Flax ResNet-50 ✅
+- [x] Implement JAX/Flax ViT-Base ✅
+- [x] Implement PyTorch ResNet-50 (or use torchvision) ✅
+- [x] Implement PyTorch ViT-Base (or use torchvision) ✅
 - [ ] Create numerical validation framework
 - [ ] Validate ResNet-50 outputs match (JAX vs PyTorch)
 - [ ] Validate ViT-Base outputs match (JAX vs PyTorch)
-- [ ] Build timing utilities with statistics
-- [ ] Build memory profiling utilities
-- [ ] Build CSV logging system
+- [x] Build timing utilities with statistics ✅
+- [x] Build memory profiling utilities ✅
+- [x] Build CSV logging system ✅
 - [ ] Create unified benchmark runner
-- [ ] Implement data loading (synthetic + ImageNet-100)
+- [x] Implement data loading (synthetic + ImageNet-100) ✅
 - [ ] Run initial baseline benchmarks
 - [ ] Document model implementations
 
@@ -288,6 +288,21 @@ Throughput: 1810.73 images/sec
 - Begin testing on local systems before moving to H100
 - **Status: 🚧 IN PROGRESS** - Currently being worked on
 - **Primary Contributor**: Shashwat S. (ssinha30@uic.edu)
+
+### Progress Update
+
+**Completed Components:**
+- ✅ Timing utilities (`utils/timing.py`) - LatencyStats, synchronization, throughput calculation
+- ✅ Memory profiling (`utils/memory.py`) - MemoryTracker, peak memory measurement
+- ✅ CSV logging (`utils/logging.py`) - BenchmarkLogger with full schema
+- ✅ Data loading (`utils/data.py`) - Synthetic data generation and ImageNet-100 loader
+- ✅ PyTorch models (`models/torch_zoo.py`) - ResNet-50 and ViT-Base from torchvision
+- ✅ JAX/Flax models (`models/jax_flax_zoo.py`) - Native ResNet-50 and ViT-Base implementations
+
+**Remaining Tasks:**
+- ⏳ Numerical validation framework (`utils/validation.py`)
+- ⏳ Unified benchmark runner (`bench/runner.py`)
+- ⏳ Integration testing and baseline measurements
 
 ---
 

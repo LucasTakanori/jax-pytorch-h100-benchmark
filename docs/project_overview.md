@@ -54,15 +54,16 @@ This project provides a systematic evaluation of JAX and PyTorch performance, fo
 │   ├── bench_infer_jax.py
 │   └── runner.py       # Unified benchmark runner (Phase 2)
 ├── models/             # Model implementations
-│   ├── torch_zoo.py    # PyTorch models (Phase 2)
-│   └── jax_flax_zoo.py # JAX/Flax models (Phase 2)
+│   ├── __init__.py
+│   ├── torch_zoo.py    # PyTorch models (ResNet-50, ViT-Base) ✅
+│   └── jax_flax_zoo.py # JAX/Flax models (ResNet-50, ViT-Base) ✅
 ├── utils/              # Utilities
 │   ├── device.py       # Device detection (Phase 1) ✅
-│   ├── timing.py       # Timing utilities (Phase 2)
-│   ├── memory.py       # Memory profiling (Phase 2)
-│   ├── logging.py      # CSV logging (Phase 2)
-│   ├── data.py         # Data loading (Phase 2)
-│   └── validation.py   # Numerical validation (Phase 2)
+│   ├── timing.py       # Timing utilities (Phase 2) ✅
+│   ├── memory.py       # Memory profiling (Phase 2) ✅
+│   ├── logging.py      # CSV logging (Phase 2) ✅
+│   ├── data.py         # Data loading (Phase 2) ✅
+│   └── validation.py   # Numerical validation (Phase 2 - in progress)
 ├── scripts/
 │   └── verify_setup.py # Setup verification (Phase 1) ✅
 ├── data/
