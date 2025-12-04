@@ -160,16 +160,37 @@ export XLA_FLAGS="--xla_gpu_autotune_level=0"
 
 *Note: PyTorch models use pre-trained weights; JAX models train from scratch*
 
+## Author
+
+**Lucas Takanori Sanchez** (Primary Author - 95% of work)
+- Research proposal and experimental design
+- Complete implementation of benchmarking infrastructure
+- Training and inference framework development
+- XLA compiler bug investigation and fixes
+- All experimental runs on NVIDIA H100
+- Data analysis and visualization
+- Final report authoring
+
+*University of Illinois at Chicago*  
+Contact: lsanc68@uic.edu
+
+## Contributors
+
+- **Shashwat Sinha** - Initial primitive version and Phase 1-2 setup ([original repo](https://github.com/shashsinha8/594Project))
+- **Prathyush Balla** - Presentation support
+- **Sai Madhav Badri** - Presentation support
+
 ## Citation
 
 If you use this benchmark in your research, please cite:
 
 ```bibtex
-@misc{jax_pytorch_benchmark_2024,
+@misc{sanchez2024jax_pytorch_h100,
   title={Deep Learning Framework Benchmark: JAX vs PyTorch on NVIDIA H100},
-  author={Your Name},
+  author={Sanchez, Lucas Takanori},
   year={2024},
-  howpublished={\url{https://github.com/yourusername/594Project}}
+  institution={University of Illinois at Chicago},
+  howpublished={\url{https://github.com/LucasTakanori/jax-pytorch-h100-benchmark}}
 }
 ```
 
