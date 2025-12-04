@@ -243,25 +243,205 @@ def load_imagenet100(
         raise ValueError(f"Unknown framework: {framework}")
 
 
+def load_imagenet100_hf(
+    data_dir: str,
+    framework: str = 'pytorch',
+    split: str = 'train',
+    batch_size: int = 32,
+    shuffle: bool = False,
+    num_workers: int = 4
+) -> Any:
+    """
+    Load ImageNet-100 from HuggingFace datasets format (parquet files).
+
+    Args:
+        data_dir: Root directory containing ImageNet-100 dataset
+        framework: 'pytorch' or 'jax'
+        split: 'train' or 'validation'
+        batch_size: Batch size for DataLoader
+        shuffle: Whether to shuffle data
+        num_workers: Number of worker processes
+
+    Returns:
+        DataLoader or dataset iterator
+    """
+    from datasets import load_dataset
+
+    if framework == 'pytorch':
+        import torch
+        from torch.utils.data import DataLoader
+        from torchvision import transforms
+        from PIL import Image
+
+        # Load HuggingFace dataset
+        dataset = load_dataset(
+            "imagefolder",
+            data_dir=data_dir,
+            split=split
+        )
+
+        # ImageNet preprocessing
+        transform = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.485, 0.456, 0.406],
+                std=[0.229, 0.224, 0.225]
+            )
+        ])
+
+        def preprocess_fn(examples):
+            """Preprocess batch of examples."""
+            images = []
+            for img in examples['image']:
+                # Ensure RGB format
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                images.append(transform(img))
+
+            return {
+                'pixel_values': torch.stack(images),
+                'labels': torch.tensor(examples['label'], dtype=torch.long)
+            }
+
+        # Set transform
+        dataset.set_transform(preprocess_fn)
+
+        # Create DataLoader
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=num_workers,
+            pin_memory=True,
+            drop_last=False
+        )
+
+        return dataloader
+
+    elif framework == 'jax':
+        import jax.numpy as jnp
+        import numpy as np
+        from PIL import Image
+
+        # Load HuggingFace dataset
+        dataset = load_dataset(
+            "imagefolder",
+            data_dir=data_dir,
+            split=split
+        )
+
+        # JAX preprocessing (HWC format)
+        def preprocess_image(img):
+            """Preprocess single image for JAX."""
+            # Ensure RGB
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+
+            # Resize and crop
+            img = img.resize((256, 256), Image.BILINEAR)
+            width, height = img.size
+            left = (width - 224) // 2
+            top = (height - 224) // 2
+            img = img.crop((left, top, left + 224, top + 224))
+
+            # Convert to numpy array (HWC format)
+            img_array = np.array(img).astype(np.float32) / 255.0
+
+            # Normalize
+            mean = np.array([0.485, 0.456, 0.406])
+            std = np.array([0.229, 0.224, 0.225])
+            img_array = (img_array - mean) / std
+
+            return img_array
+
+        def jax_iterator():
+            """Iterator that yields JAX batches."""
+            batch_images = []
+            batch_labels = []
+
+            for example in dataset:
+                img = preprocess_image(example['image'])
+                label = example['label']
+
+                batch_images.append(img)
+                batch_labels.append(label)
+
+                if len(batch_images) == batch_size:
+                    yield {
+                        'pixel_values': jnp.array(batch_images),
+                        'labels': jnp.array(batch_labels)
+                    }
+                    batch_images = []
+                    batch_labels = []
+
+            # Yield remaining samples
+            if batch_images:
+                yield {
+                    'pixel_values': jnp.array(batch_images),
+                    'labels': jnp.array(batch_labels)
+                }
+
+        return jax_iterator()
+
+    else:
+        raise ValueError(f"Unknown framework: {framework}")
+
+
+def get_dataset_stats(data_dir: str) -> dict:
+    """
+    Get statistics about ImageNet-100 dataset.
+
+    Args:
+        data_dir: Path to dataset directory
+
+    Returns:
+        Dictionary with dataset statistics
+    """
+    from datasets import load_dataset
+
+    try:
+        # Load datasets
+        train_dataset = load_dataset("imagefolder", data_dir=data_dir, split="train")
+        val_dataset = load_dataset("imagefolder", data_dir=data_dir, split="validation")
+
+        # Get class information
+        num_classes = len(set(train_dataset['label']))
+
+        return {
+            'num_train_samples': len(train_dataset),
+            'num_val_samples': len(val_dataset),
+            'num_classes': num_classes,
+            'train_split': 'train',
+            'val_split': 'validation'
+        }
+    except Exception as e:
+        print(f"Warning: Could not load dataset stats: {e}")
+        return None
+
+
 def create_dataloader(
     data_source: str,
     batch_size: int,
     input_shape: Tuple[int, ...],
     framework: str = 'pytorch',
     device: Optional[Any] = None,
+    split: str = 'train',
     **kwargs
 ) -> Any:
     """
     Create a data loader/iterator for benchmarking.
-    
+
     Args:
         data_source: 'synthetic' or path to ImageNet-100 dataset
         batch_size: Batch size
         input_shape: Input shape tuple (framework-specific format)
         framework: 'pytorch' or 'jax'
         device: Device object (for PyTorch)
-        **kwargs: Additional arguments (seed for synthetic, etc.)
-        
+        split: 'train' or 'validation' (for real datasets)
+        **kwargs: Additional arguments (seed for synthetic, num_workers, etc.)
+
     Returns:
         DataLoader, iterator, or generator
     """
@@ -278,15 +458,27 @@ def create_dataloader(
                     device=device,
                     seed=seed
                 )
-        
+
         return synthetic_generator()
-    
+
     else:
-        # Assume it's a path to ImageNet-100
-        return load_imagenet100(
-            root=data_source,
-            framework=framework,
-            batch_size=batch_size,
-            **kwargs
-        )
+        # Try HuggingFace format first
+        try:
+            return load_imagenet100_hf(
+                data_dir=data_source,
+                framework=framework,
+                split=split,
+                batch_size=batch_size,
+                shuffle=kwargs.get('shuffle', False),
+                num_workers=kwargs.get('num_workers', 4)
+            )
+        except:
+            # Fallback to ImageFolder format
+            return load_imagenet100(
+                root=data_source,
+                framework=framework,
+                split=split,
+                batch_size=batch_size,
+                **kwargs
+            )
 

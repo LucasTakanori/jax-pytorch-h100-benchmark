@@ -1,0 +1,34 @@
+\begin{table}[htbp]
+\caption{Training Performance Comparison (Final Epoch)}
+\begin{center}
+\small
+\begin{tabular}{llrrrr}
+\toprule
+Model & FW & BS & Val Acc (\%) & Time/Epoch (s) & Energy (kJ) \\
+\midrule
+efficientnet-b0 & JAX & 32 & 10.6 & 200.1 & 20.5 \\
+efficientnet-b0 & JAX & 64 & 10.8 & 198.0 & 20.2 \\
+efficientnet-b0 & JAX & 128 & 5.5 & 216.4 & 26.5 \\
+efficientnet-b0 & PT & 32 & 90.2 & 104.7 & 20.8 \\
+efficientnet-b0 & PT & 64 & 90.7 & 92.8 & 20.1 \\
+efficientnet-b0 & PT & 128 & 90.4 & 95.4 & 19.8 \\
+mobilenet-v3-small & JAX & 32 & 11.6 & 165.4 & 15.1 \\
+mobilenet-v3-small & JAX & 64 & 9.0 & 173.4 & 15.3 \\
+mobilenet-v3-small & JAX & 128 & 6.0 & 193.3 & 17.8 \\
+mobilenet-v3-small & PT & 32 & 80.2 & 90.2 & 9.8 \\
+mobilenet-v3-small & PT & 64 & 79.2 & 93.3 & 9.7 \\
+mobilenet-v3-small & PT & 128 & 75.9 & 93.5 & 10.3 \\
+resnet50 & JAX & 32 & 36.3 & 159.1 & 20.7 \\
+resnet50 & JAX & 64 & 33.2 & 163.2 & 20.2 \\
+resnet50 & JAX & 128 & 28.7 & 167.2 & 21.4 \\
+resnet50 & PT & 32 & 90.8 & 102.4 & 24.3 \\
+resnet50 & PT & 64 & 91.7 & 93.1 & 25.6 \\
+resnet50 & PT & 128 & 92.0 & 94.7 & 26.0 \\
+vit-b-16 & PT & 32 & 87.5 & 475.3 & 151.0 \\
+vit-b-16 & PT & 64 & 89.9 & 440.5 & 123.4 \\
+vit-b-16 & PT & 128 & 90.3 & 418.0 & 129.7 \\
+\bottomrule
+\end{tabular}
+\label{tab:training_summary}
+\end{center}
+\end{table}

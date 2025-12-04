@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\caption{Inference Performance Comparison (Batch Size 128)}
+\begin{center}
+\small
+\begin{tabular}{lccccccr}
+\toprule
+Model & \multicolumn{2}{c}{Tput} & \multicolumn{2}{c}{Lat p50/p95} & \multicolumn{2}{c}{Mem} & Spd \\
+ & \scriptsize PT & \scriptsize JAX & \scriptsize PT & \scriptsize JAX & \scriptsize PT & \scriptsize JAX & \scriptsize (x) \\
+\midrule
+EffNet-B0 & 9027 & 16510 & 14.1/14.8 & 7.7/8.3 & 1468 & 3905 & 1.83 \\
+MNet-V3 & 37325 & 56123 & 3.4/3.4 & 2.3/2.3 & 378 & 1500 & 1.50 \\
+RN50 & 5915 & 11739 & 21.4/22.8 & 10.8/11.4 & 1549 & 1724 & 1.98 \\
+ViT-B & 946 & 530 & 135.5/138.0 & 241.6/243.2 & 1466 & 1056 & 0.56 \\
+\bottomrule
+\end{tabular}
+\label{tab:inference_summary}
+\par\vspace{1mm}\scriptsize Tput: Throughput (img/s), Lat: Latency (ms), Mem: Memory (MB), Spd: Speedup, PT: PyTorch
+\end{center}
+\end{table}

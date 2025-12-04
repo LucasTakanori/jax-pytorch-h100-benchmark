@@ -23,6 +23,18 @@ MODEL_METADATA = {
         'params': 86_567_656,  # ~86M parameters
         'input_shape': (3, 224, 224),
         'flops': 17.6e9,  # ~17.6 GFLOPs
+    },
+    'mobilenet_v3_small': {
+        'name': 'MobileNetV3-Small',
+        'params': 2_537_682,  # ~2.5M parameters
+        'input_shape': (3, 224, 224),
+        'flops': 0.056e9,  # ~56 MFLOPs
+    },
+    'efficientnet_b0': {
+        'name': 'EfficientNet-B0',
+        'params': 5_288_548,  # ~5.3M parameters
+        'input_shape': (3, 224, 224),
+        'flops': 0.39e9,  # ~390 MFLOPs
     }
 }
 
@@ -49,34 +61,46 @@ def get_torch_model(
 ) -> Tuple[nn.Module, Callable, Tuple[int, ...], Dict[str, Any]]:
     """
     Get PyTorch model with consistent interface.
-    
+
     Args:
-        model_name: 'resnet50' or 'vit_b_16'
+        model_name: 'resnet50', 'vit_b_16', 'mobilenet_v3_small', or 'efficientnet_b0'
         pretrained: Whether to load pretrained weights
         device: Optional device to move model to
-        
+
     Returns:
         Tuple of (model, preprocessing_fn, input_shape, metadata)
     """
     if model_name not in MODEL_METADATA:
         raise ValueError(f"Unknown model: {model_name}. Available: {list(MODEL_METADATA.keys())}")
-    
+
     metadata = MODEL_METADATA[model_name]
     input_shape = metadata['input_shape']
-    
+
     # Load model
     if model_name == 'resnet50':
         if pretrained:
             model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
         else:
             model = models.resnet50(weights=None)
-    
+
     elif model_name == 'vit_b_16':
         if pretrained:
             model = models.vit_b_16(weights=models.ViT_B_16_Weights.IMAGENET1K_V1)
         else:
             model = models.vit_b_16(weights=None)
-    
+
+    elif model_name == 'mobilenet_v3_small':
+        if pretrained:
+            model = models.mobilenet_v3_small(weights=models.MobileNet_V3_Small_Weights.IMAGENET1K_V1)
+        else:
+            model = models.mobilenet_v3_small(weights=None)
+
+    elif model_name == 'efficientnet_b0':
+        if pretrained:
+            model = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.IMAGENET1K_V1)
+        else:
+            model = models.efficientnet_b0(weights=None)
+
     else:
         raise ValueError(f"Model {model_name} not implemented")
     

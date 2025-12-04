@@ -3,6 +3,8 @@ numpy
 pandas
 matplotlib
 psutil
+datasets
+wandb
 
 # PyTorch - automatically uses CPU, CUDA, or MPS based on system
 torch
@@ -19,8 +21,11 @@ flax
 
 # Optional: GPU monitoring tools (for energy measurement on NVIDIA GPUs)
 # Install only if you have NVIDIA GPUs and want energy profiling:
-#   pip install nvidia-ml-py3
-# nvidia-ml-py3  # Uncomment if using NVIDIA GPUs
+#   uv pip install --system "nvidia-ml-py>=12.535.0"
+# nvidia-ml-py>=12.535.0  # Provides the pynvml module
+
+# Optional: datasets backend dependency (required for HF datasets + ImageNet loader)
+pyarrow>=14.0.0,<15.0.0
 
 # Optional: For better profiling and visualization
 # tensorboard  # Uncomment if you want TensorBoard integration

@@ -125,6 +125,12 @@ class BenchmarkLogger:
         """
         for result in results:
             self.append_result(result)
+
+    def log_results(self, results: List[Dict[str, Any]]) -> None:
+        """
+        Backwards-compatible alias for append_results used by older scripts.
+        """
+        self.append_results(results)
     
     def read_results(self) -> pd.DataFrame:
         """

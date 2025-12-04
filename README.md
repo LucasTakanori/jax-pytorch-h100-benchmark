@@ -1,98 +1,184 @@
-# 594Project
+# Deep Learning Framework Benchmark: JAX vs PyTorch
 
-**Cross-Platform Performance Analysis of Modern Neural Networks: A JAX-Centric Hardware-Software Co-Design Study**
-
-University of Illinois at Chicago | ECE 594 HW-SW Co-Design for ML Systems
+A comprehensive performance comparison of JAX/Flax and PyTorch for computer vision workloads on NVIDIA H100 GPUs.
 
 ## Overview
 
-This project benchmarks and compares PyTorch and JAX performance across different neural network architectures (ResNet-50, Vision Transformer) and hardware platforms (CPU, GPU, TPU).
+This project benchmarks inference and training performance across multiple CNN and transformer architectures, measuring throughput, latency, memory usage, and energy consumption. The study reveals JAX's 1.5-2× speedup for CNNs but identifies critical stability issues with Vision Transformers due to XLA compiler bugs.
+
+### Key Findings
+
+- **CNN Performance**: JAX achieves 1.98× speedup on ResNet-50, 1.83× on EfficientNet-B0
+- **Transformer Challenges**: ViT-Base experiences XLA autotuning failures requiring workarounds
+- **Memory Trade-offs**: JAX uses ~10-15% more memory but delivers lower latency
+- **Energy Efficiency**: Similar power consumption between frameworks for equivalent workloads
+
+## Repository Structure
+
+```
+├── bench/                  # Core benchmarking code
+│   ├── runner.py          # Inference benchmark runner  
+│   ├── training_runner.py # Training benchmark runner
+│   ├── jax_models.py      # JAX/Flax model implementations
+│   └── pytorch_models.py  # PyTorch model implementations
+├── utils/                 # Utility modules
+│   ├── device.py         # Device detection and setup
+│   ├── memory.py         # Memory tracking utilities
+│   ├── energy.py         # Energy measurement via NVML
+│   └── timing.py         # Timing and synchronization
+├── models/               # Model architecture definitions
+├── analysis/             # Generated analysis outputs
+├── report/               # LaTeX report and figures
+├── results/              # Raw benchmark CSV results
+└── scripts/              # Helper scripts for running benchmarks
+```
+
+## Hardware & Software Requirements
+
+### Hardware
+- **GPU**: NVIDIA H100 NVL (80GB) or comparable
+- **CPU**: AMD EPYC 7763 or similar
+- **RAM**: 512GB recommended for full dataset
+
+### Software
+- Python 3.10+
+- CUDA 12.x
+- cuDNN 8.9+
+
+## Installation
+
+### 1. Create Virtual Environment
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+### 2. Install Dependencies
+
+```bash
+# Core dependencies
+pip install -r requirements.txt
+
+# Optional: Energy tracking (requires root/sudo for NVML)
+pip install -r requirements_energy.txt
+```
+
+### 3. Configure Hugging Face Cache (Optional)
+
+```bash
+export HF_HOME=/path/to/.cache/huggingface
+export HF_DATASETS_CACHE=$HF_HOME/datasets
+export HF_HUB_CACHE=$HF_HOME/hub
+```
 
 ## Quick Start
 
-### Setup
+### Run Inference Benchmark
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd 594Project
-   ```
+```bash
+# PyTorch inference
+python bench/runner.py \
+    --framework pytorch \
+    --model resnet50 \
+    --batch-sizes 1 8 32 128 \
+    --output-dir results/inference/pytorch
 
-2. **Set up environment:**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-
-3. **Verify installation:**
-   ```bash
-   python scripts/verify_setup.py
-   ```
-
-4. **Run a test benchmark:**
-   ```bash
-   python bench/bench_infer_torch.py
-   python bench/bench_infer_jax.py
-   ```
-
-### Documentation
-
-- **[Project Overview](docs/project_overview.md)** - Research question, scope, and quick reference
-- **[Project Phases](docs/phases.md)** - Detailed breakdown of all 5 project phases, objectives, deliverables, and timeline
-- **[Setup Guide](docs/setup.md)** - Complete setup instructions for local (macOS) and remote (H100) systems
-- **[TPU Setup Guide](docs/tpu_setup.md)** - Instructions for obtaining and setting up Google Cloud TPU access
-- **[Models Documentation](docs/models.md)** - Model implementations guide (ResNet-50, ViT-Base)
-- **[Benchmarking Guide](docs/benchmarking.md)** - How to use the benchmarking infrastructure
-- **[Validation Guide](docs/validation.md)** - Numerical validation framework and results
-
-## Project Structure
-
-```
-594Project/
-├── bench/              # Benchmark scripts
-│   ├── bench_infer_torch.py
-│   ├── bench_infer_jax.py
-│   └── runner.py       # Unified benchmark runner ✅
-├── models/             # Model implementations
-│   ├── __init__.py
-│   ├── torch_zoo.py   # PyTorch models (ResNet-50, ViT-Base) ✅
-│   └── jax_flax_zoo.py # JAX/Flax models (ResNet-50, ViT-Base) ✅
-├── utils/              # Utilities
-│   ├── device.py       # Device detection ✅
-│   ├── timing.py      # Latency statistics ✅
-│   ├── memory.py       # Memory profiling ✅
-│   ├── logging.py     # CSV result logging ✅
-│   ├── data.py        # Data loading ✅
-│   └── validation.py  # Numerical validation ✅
-├── scripts/            # Helper scripts
-│   └── verify_setup.py # Setup verification ✅
-├── data/               # Dataset storage (ImageNet-100)
-├── results/             # Benchmark results
-│   ├── raw/            # CSV logs
-│   └── figs/           # Plots and visualizations
-└── docs/               # Documentation
+# JAX inference (with ViT fix)
+bash run_jax_inference_fixed.sh
 ```
 
-## Team Members
+### Run Training Benchmark
 
-- Sanchez Shiromizu L.T. (lsanc68@uic.edu)
-- Shashwat S. (ssinha30@uic.edu) - **Phase 1 & 2 Primary Contributor**
-- Prathyush B. (pball5@uic.edu)
-- Sai M. (sbadr4@uic.edu)
+```bash
+# Full training benchmark (both frameworks)
+bash run_full_benchmark_with_inference.sh
 
-## Project Status
+# Individual training run
+python bench/training_runner.py \
+    --framework pytorch \
+    --model resnet50 \
+    --batch-size 32 \
+    --epochs 2 \
+    --dataset clane9/imagenet-100
+```
 
-- ✅ **Phase 1: Setup** (Complete - Shashwat S.) - Device detection, verification scripts, documentation. **Sole contributor: Shashwat S.**
-- ✅ **Phase 2: Implementation & Infrastructure** (Complete - Shashwat S.) - Model implementations, benchmarking infrastructure. **Sole contributor: Shashwat S.**
-- ⏳ **Phase 3: Data Collection** (Pending - Team) - Comprehensive benchmarking across all configurations
-- ⏳ **Phase 4: Analysis & Documentation** (Pending - Team) - Performance analysis, visualizations, report writing
-- ⏳ **Phase 5: Finalization** (Pending - Team) - Code cleanup, presentation, repository finalization
+### Analyze Results
 
-**Note**: Phases are sequential. Phases 1-2 were completed solely by Shashwat S. Phases 3-4 will be handled by the team.
+```bash
+python analyze_results.py
+```
 
-See [Project Phases](docs/phases.md) for detailed phase breakdown, objectives, and deliverables.
+This generates:
+- LaTeX tables in `analysis/`
+- Throughput scaling plots
+- Memory/energy comparison charts
 
-## Contributing
+## Supported Models
 
-See [Setup Guide](docs/setup.md) for environment setup and collaboration guidelines.
+| Model | Parameters | FLOPs | Architecture Type |
+|-------|-----------|-------|-------------------|
+| ResNet-50 | 25.6M | 4.1G | CNN (Residual) |
+| ViT-Base | 86M | 17.6G | Transformer |
+| MobileNetV3-Small | 2.5M | 56M | CNN (Efficient) |
+| EfficientNet-B0 | 5.3M | 390M | CNN (Compound Scaled) |
+
+## Known Issues
+
+### ViT XLA Autotuning Bug
+
+**Problem**: JAX ViT-Base crashes with `CUDA_ERROR_ILLEGAL_ADDRESS` on H100 GPUs when XLA autotuning is enabled.
+
+**Workaround**: Disable autotuning for ViT:
+```bash
+export XLA_FLAGS="--xla_gpu_autotune_level=0"
+```
+
+**Impact**: ViT inference runs at 0.56× PyTorch speed instead of expected speedup. Training fails entirely.
+
+**Solution**: See `run_jax_inference_fixed.sh` for conditional autotuning logic.
+
+## Results Summary
+
+### Inference Performance (Batch Size 128)
+
+| Model | PyTorch (img/s) | JAX (img/s) | Speedup |
+|-------|----------------|-------------|---------|
+| ResNet-50 | 5,915 | 11,739 | 1.98× |
+| MobileNetV3 | 37,325 | 56,123 | 1.50× |
+| EfficientNet-B0 | 9,027 | 16,510 | 1.83× |
+| ViT-Base | 946 | 530 | 0.56× |
+
+### Training Performance (Batch Size 32, Epoch 2)
+
+| Model | Framework | Val Acc (%) | Time/Epoch (s) | Energy (kJ) |
+|-------|-----------|-------------|----------------|-------------|
+| ResNet-50 | PyTorch | 90.8 | 102.4 | 24.3 |
+| ResNet-50 | JAX | 36.3 | 159.1 | 20.7 |
+| MobileNetV3 | PyTorch | 80.2 | 90.2 | 9.8 |
+| MobileNetV3 | JAX | 11.6 | 165.4 | 15.1 |
+
+*Note: PyTorch models use pre-trained weights; JAX models train from scratch*
+
+## Citation
+
+If you use this benchmark in your research, please cite:
+
+```bibtex
+@misc{jax_pytorch_benchmark_2024,
+  title={Deep Learning Framework Benchmark: JAX vs PyTorch on NVIDIA H100},
+  author={Your Name},
+  year={2024},
+  howpublished={\url{https://github.com/yourusername/594Project}}
+}
+```
+
+## License
+
+MIT License - See LICENSE file for details
+
+## Acknowledgments
+
+- ImageNet-100 dataset: clane9/imagenet-100 (Hugging Face)
+- NVIDIA for H100 GPU access
+- JAX/Flax and PyTorch teams for framework development

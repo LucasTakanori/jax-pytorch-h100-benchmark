@@ -1,0 +1,54 @@
+\begin{table*}[htbp]
+\caption{Complete Inference Benchmark Results}
+\begin{center}
+\small
+\begin{tabular}{llcccccc}
+\toprule
+Model & FW & BS & Tput (img/s) & p50 (ms) & p95 (ms) & Mem (MB) \\
+\midrule
+\multirow{8}{*}{RN50} 
+& JAX & 1 & 774 & 1.3 & 1.3 & 843 \\
+& JAX & 8 & 4647 & 1.7 & 1.7 & 858 \\
+& JAX & 32 & 9300 & 3.4 & 3.5 & 939 \\
+& JAX & 128 & 11739 & 10.8 & 11.4 & 1724 \\
+& PT & 1 & 498 & 2.0 & 2.0 & 149 \\
+& PT & 8 & 3694 & 2.2 & 2.2 & 231 \\
+& PT & 32 & 5402 & 5.9 & 5.9 & 489 \\
+& PT & 128 & 5915 & 21.4 & 22.8 & 1549 \\
+\hline
+\multirow{8}{*}{MNet-V3} 
+& JAX & 1 & 1135 & 0.9 & 0.9 & 322 \\
+& JAX & 8 & 8180 & 1.0 & 1.0 & 322 \\
+& JAX & 32 & 25325 & 1.3 & 1.3 & 372 \\
+& JAX & 128 & 56123 & 2.3 & 2.3 & 1500 \\
+& PT & 1 & 570 & 1.8 & 1.8 & 46 \\
+& PT & 8 & 4503 & 1.8 & 1.8 & 65 \\
+& PT & 32 & 17308 & 1.8 & 1.9 & 128 \\
+& PT & 128 & 37325 & 3.4 & 3.4 & 378 \\
+\hline
+\multirow{8}{*}{ViT-B} 
+& JAX & 1 & 335 & 3.0 & 3.0 & 359 \\
+& JAX & 8 & 498 & 16.1 & 16.1 & 391 \\
+& JAX & 32 & 497 & 64.5 & 64.9 & 524 \\
+& JAX & 128 & 530 & 241.6 & 243.2 & 1056 \\
+& PT & 1 & 277 & 3.6 & 3.6 & 388 \\
+& PT & 8 & 762 & 10.5 & 10.6 & 448 \\
+& PT & 32 & 851 & 38.0 & 39.2 & 651 \\
+& PT & 128 & 946 & 135.5 & 138.0 & 1466 \\
+\hline
+\multirow{8}{*}{EffNet-B0} 
+& JAX & 1 & 687 & 1.4 & 1.5 & 924 \\
+& JAX & 8 & 4225 & 1.9 & 1.9 & 930 \\
+& JAX & 32 & 10351 & 3.1 & 3.1 & 1155 \\
+& JAX & 128 & 16510 & 7.7 & 8.3 & 3905 \\
+& PT & 1 & 371 & 2.7 & 2.7 & 66 \\
+& PT & 8 & 2890 & 2.8 & 2.8 & 143 \\
+& PT & 32 & 7360 & 4.4 & 4.4 & 410 \\
+& PT & 128 & 9027 & 14.1 & 14.8 & 1468 \\
+\hline
+\bottomrule
+\end{tabular}
+\par\vspace{1mm}\scriptsize FW: Framework, BS: Batch Size, Tput: Throughput, PT: PyTorch
+\label{tab:inference_full}
+\end{center}
+\end{table*}

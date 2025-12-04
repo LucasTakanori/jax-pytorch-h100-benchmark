@@ -165,8 +165,11 @@ def get_jax_memory() -> float:
             try:
                 # This may not work on all JAX backends
                 memory_info = jax.devices()[0].memory_stats()
-                if memory_info and 'bytes_limit' in memory_info:
-                    return memory_info['bytes_limit'] / 1e6
+                # Use peak_bytes_in_use for actual peak memory, not bytes_limit (total capacity)
+                if memory_info and 'peak_bytes_in_use' in memory_info:
+                    return memory_info['peak_bytes_in_use'] / 1e6
+                elif memory_info and 'bytes_in_use' in memory_info:
+                    return memory_info['bytes_in_use'] / 1e6
             except:
                 pass
         

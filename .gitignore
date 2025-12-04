@@ -1,45 +1,54 @@
-cat > .gitignore << 'EOF'
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.so
-.env
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
 .venv/
 venv/
-env/
-*.env
-.ipynb_checkpoints/
-data/
-datasets/
-.DS_Store
-*.ckpt
-*.pth
-*.pt
-*.npz
-*.onnx
-checkpoints/
-logs/
-wandb/
-results/raw/
-results/figs/
-outputs/
-runs/
-*.log
-*.csv
-build/
-dist/
-*.egg-info/
+ENV/
+
+# IDE
 .vscode/
 .idea/
 *.swp
-Thumbs.db
-.prof
-*.profile
-*.trace
-tmp/
-*.tmp
-EOF
+*.swo
 
-mkdir -p data results/raw results/figs
-echo "Put or symlink dataset here" > data/README.md
-echo "Auto-generated CSVs land here" > results/raw/README.md
-echo "Auto-generated plots land here" > results/figs/README.md
+# Results & Logs
+*.err
+*.out
+wandb/
+outputs/
+results/*/
+!results/.gitkeep
+
+# Checkpoints
+checkpoints/
+*.pt
+*.ckpt
+checkpoint_*
+
+# Data
+*.csv
+!requirements*.txt
+*.zip
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.pdf
+!report/final_report.pdf
+
+# System
+.DS_Store
+Thumbs.db
+
+# Hugging Face Cache
+.cache/
