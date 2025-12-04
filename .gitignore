@@ -45,6 +45,7 @@ checkpoint_*
 *.toc
 *.pdf
 !report/final_report.pdf
+!analysis/*.pdf
 
 # System
 .DS_Store

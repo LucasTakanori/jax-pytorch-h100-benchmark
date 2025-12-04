@@ -6,6 +6,24 @@ A comprehensive performance comparison of JAX/Flax and PyTorch for computer visi
 
 This project benchmarks inference and training performance across multiple CNN and transformer architectures, measuring throughput, latency, memory usage, and energy consumption. The study reveals JAX's 1.5-2× speedup for CNNs but identifies critical stability issues with Vision Transformers due to XLA compiler bugs.
 
+## 📄 Full Report
+
+**[Download Full Report (PDF)](report/final_report.pdf)**
+
+The comprehensive technical report includes:
+- **Detailed Methodology**: Model architectures, benchmarking protocol, measurement tools
+- **Complete Results**: Inference and training performance across 4 models × 2 frameworks × 3 batch sizes
+- **In-Depth Analysis**: Throughput scaling, memory usage, energy consumption
+- **Critical Findings**: XLA compiler bug analysis and workarounds for ViT transformers
+- **Visualization**: 8+ figures including throughput scaling, memory comparisons, energy efficiency
+
+**Report Highlights:**
+- 109KB comprehensive LaTeX document
+- ImageNet-100 dataset (126K training images)
+- NVIDIA H100 NVL (80GB) benchmarks
+- 2-epoch training analysis
+- p50/p95 latency measurements
+
 ### Key Findings
 
 - **CNN Performance**: JAX achieves 1.98× speedup on ResNet-50, 1.83× on EfficientNet-B0

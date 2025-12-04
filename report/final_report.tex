@@ -23,12 +23,21 @@ Chicago, IL}
 \maketitle
 
 \begin{abstract}
-This paper presents a comprehensive performance analysis of modern neural network architectures across JAX and PyTorch frameworks on GPU hardware. We benchmarked four representative models (ResNet-50, ViT-Base, MobileNetV3-Small, and EfficientNet-B0) across varying batch sizes, measuring latency, throughput, memory usage, and energy consumption. Our results demonstrate that JAX consistently outperforms PyTorch in inference throughput by 1.5-2.0$\times$ for CNN architectures (ResNet, MobileNet, EfficientNet). However, for Vision Transformers (ViT), we reveal a critical stability-performance tradeoff: JAX required disabling XLA autotuning to prevent compiler-induced crashes, resulting in 0.56$\times$ performance relative to PyTorch. For training, we provide detailed PyTorch baselines showing model-specific tradeoffs between accuracy, speed, and energy efficiency. These findings provide actionable insights for practitioners: JAX offers significant speedups for mature CNN workloads, while PyTorch remains more robust for bleeding-edge transformer configurations on specific hardware.
+This paper presents a comprehensive performance analysis of modern neural network architectures across JAX and PyTorch frameworks on GPU hardware.
+ We benchmarked four representative models (ResNet-50, ViT-Base, MobileNetV3-Small, and EfficientNet-B0) across varying batch sizes, measuring latency,
+  throughput, memory usage, and energy consumption. Our results demonstrate that JAX consistently outperforms PyTorch in inference throughput by
+   1.5-2.0$\times$ for CNN architectures (ResNet, MobileNet, EfficientNet). However, for Vision Transformers (ViT), we reveal a critical 
+   stability-performance tradeoff: JAX required disabling XLA autotuning to prevent compiler-induced crashes, resulting in 0.56$\times$ 
+   performance relative to PyTorch. For training, we provide detailed PyTorch baselines showing model-specific tradeoffs between accuracy,
+    speed, and energy efficiency. These findings provide actionable insights for practitioners: JAX offers significant speedups for mature 
+    CNN workloads, while PyTorch remains more robust for transformer configurations on specific hardware.
 \end{abstract}
 
 \section{Introduction}
 
-The deployment of machine learning models requires careful selection of both hardware platforms and software frameworks, yet guidance for these decisions remains surprisingly scarce \cite{menghani2023efficient, bianco2018benchmark}. This work addresses the critical question: \textbf{How does JAX compare to PyTorch across different neural network architectures on modern GPU hardware?}
+The deployment of machine learning models requires careful selection of both hardware platforms and software frameworks, yet guidance for these
+ decisions remains surprisingly scarce \cite{menghani2023efficient, bianco2018benchmark}. This work addresses the critical question: 
+ \textbf{How does JAX compare to PyTorch across different neural network architectures on modern GPU hardware?}
 
 We conducted a systematic benchmarking study of four representative neural network architectures spanning different computational characteristics:
 \begin{itemize}
@@ -38,7 +47,8 @@ We conducted a systematic benchmarking study of four representative neural netwo
     \item \textbf{EfficientNet-B0}: Compound-scaled CNN (5.3M parameters, 390 MFLOPs)
 \end{itemize}
 
-Our contributions include: (1) comprehensive inference benchmarks comparing JAX and PyTorch across batch sizes, (2) detailed training performance baselines for PyTorch, (3) energy efficiency analysis, and (4) actionable recommendations for framework selection.
+Our contributions include: (1) comprehensive inference benchmarks comparing JAX and PyTorch across batch sizes, (2) detailed training performance
+ baselines for PyTorch, (3) energy efficiency analysis, and (4) actionable recommendations for framework selection.
 
 \section{Methodology}
 
@@ -48,53 +58,113 @@ Our contributions include: (1) comprehensive inference benchmarks comparing JAX 
 
 \textbf{Software}: JAX 0.4.x (with XLA), PyTorch 2.0+ with cuDNN, ImageNet-100 dataset (100 classes, 126,689 training images, 5,000 validation images)
 
-\textbf{Models}: We implemented all models in both frameworks, using native JAX/Flax implementations and PyTorch's torchvision models. All models were evaluated at FP32 precision.
+\textbf{Models}: We implemented all models in both frameworks, using native JAX/Flax implementations and PyTorch's torchvision models. 
+All models were evaluated at FP32 precision.
+
+\subsection{Framework Backends: PyTorch+cuDNN and JAX+XLA}
+
+\textbf{PyTorch + cuDNN (2016/2014).} PyTorch was open-sourced in 2016 and rapidly became the dominant training framework across academia and 
+industry due to its eager execution, Python like programming, and rich ecosystem (torchvision, torchaudio, TorchScript/Inductor). NVIDIA's cuDNN, 
+first released in 2014, provides highly-optimized GPU primitives for convolutions, RNNs, and normalization layers. Popularity: widely adopted 
+with stable, production-ready kernels and strong vendor support. Main features: \textit{eager-first} execution with optional graph capture,
+cuDNN autotuning for convolution algorithms, predictable, on-demand GPU memory via a caching allocator. Excels at: CNN-centric workloads, broad
+ operator coverage, and out-of-the-box reliability. We chose this framework because of its mature tooling, robust performance without heavy compiler tuning, and straightforward debugging.
+
+\textbf{JAX + XLA (2018/2016).} JAX (2018) combines a NumPy-like API with composable transformations (\texttt{jit}, \texttt{vmap}, \texttt{pmap},
+ \texttt{grad}) and stages computations to XLA, a whole-graph compiler originating from TensorFlow (circa 2016). It's fast-growing in 
+ research, especially for large-scale TPU/GPU training. It's widely used for functional/array programming styles. Main features: graph-level fusion,
+  layout/tiling optimizations, and SPMD-style parallelism across devices. It excels at compute-bound workloads and large-batch execution where 
+  fusion reduces launch overheads and improves arithmetic intensity. We chose this framework because it provides peak throughput when compilers are stable, clean 
+  functional model with powerful transform composition. Compiler fragility for novel tensor shapes/ops can require disabling autotuning;
+   debugging compiled graphs is harder and GPU memory is pre-reserved via a large pool (often 75–90\% of VRAM), so we report \textit{used bytes within the pool}
+    for fair peak-memory comparisons.
+
+\textbf{Why these backends now.} These are the production frameworks on NVIDIA GPUs. Our focus is showing which framework give the best practical performance.
+CPU-only and TPU backends were part of the plan but, due to time constraints,
+ we prioritized GPU, CPU and TPU are documented in Limitations as future work.
 
 \subsection{Model Architectures}
 
-We selected four architectures to represent fundamentally different design paradigms in modern deep learning (Figure \ref{fig:architectures}). These models span a wide range of computational characteristics, memory access patterns, and optimization challenges, providing a comprehensive test suite for framework performance analysis.
+We selected four architectures to represent fundamentally different design paradigms in modern deep learning .
+ These models span a wide range of computational characteristics, memory access patterns, and optimization challenges, providing a comprehensive 
+ test suite for framework performance analysis.
 
 \subsubsection{ResNet-50: The CNN Baseline}
-\textbf{Architecture}: ResNet-50 \cite{he2016deep} is a 50-layer convolutional neural network with 25.6M parameters and 4.1 GFLOPs of computation per inference. Its defining feature is the \textit{residual connection}: skip connections that allow gradients to flow directly through the network, enabling training of very deep architectures.
 
-\textbf{Computational Profile}: ResNet-50 is heavily \textit{compute-bound}. The majority of its operations are dense 3x3 convolutions, which benefit from highly optimized BLAS libraries (cuDNN for PyTorch, XLA for JAX). Memory bandwidth is not a bottleneck. This makes it an ideal baseline for measuring compiler optimization effectiveness.
+\textbf{Architecture}: ResNet-50 \cite{he2016deep} is a 50-layer convolutional neural network with 25.6M parameters and 4.1 GFLOPs of computation
+ per inference. Its defining feature is the \textit{residual connection}: skip connections that allow gradients to flow directly through the network,
+  enabling training of very deep architectures.
 
-\textbf{Why This Model}: ResNet represents the "mature CNN" class. It has been in production for nearly a decade, and all frameworks have heavily optimized code paths for it. Any performance differences here reflect compiler quality, not framework maturity. It serves as our control experiment.
+\textbf{Computational Profile}: ResNet-50 is heavily \textit{compute-bound}. The majority of its operations are dense 3x3 convolutions, which benefit
+ from highly optimized BLAS libraries (cuDNN for PyTorch, XLA for JAX). Memory bandwidth is not a bottleneck. This makes it an ideal baseline for
+  measuring compiler optimization effectiveness.
+
+ResNet-50 represents the "mature CNN" class. It has been in production for nearly a decade, and all frameworks have heavily 
+optimized code paths for it. Any performance differences here reflect compiler quality, not framework maturity. It serves as our control experiment.
 
 \begin{figure}[h]
     \centering
-    % \includegraphics[width=0.45\textwidth]{path/to/resnet_arch.png}
-    \caption{ResNet-50 Architecture: Sequential blocks with skip connections enable gradient flow. (Placeholder)}
+    \includegraphics[width=0.45\textwidth]{resnet.png}
+    \caption{ResNet-50 architecture with residual blocks and skip connections enabling stable gradient flow \cite{he2016deep}.}
     \label{fig:resnet_arch}
 \end{figure}
 
 \subsubsection{Vision Transformer (ViT-Base): The Attention Revolution}
-\textbf{Architecture}: ViT-Base \cite{dosovitskiy2020image} is a pure transformer with 86M parameters and 17.6 GFLOPs. Unlike CNNs, it has no convolutions. Instead, it divides the input image into 16x16 patches, linearly projects them, and processes them through 12 transformer encoder blocks with multi-head self-attention.
+\textbf{Architecture}: ViT-Base \cite{dosovitskiy2020image} is a pure transformer with 86M parameters and 17.6 GFLOPs. Unlike CNNs, it has no convolutions.
+ Instead, it divides the input image into 16x16 patches, linearly projects them, and processes them through 12 transformer encoder blocks with multi-head
+  self-attention.
 
-\textbf{Computational Profile}: ViT is \textit{memory-bound}. Self-attention has quadratic complexity in the number of tokens (197 for a 224x224 image), leading to large intermediate activations. The attention mechanism involves multiple matrix multiplications with non-standard shapes, challenging compiler autotuning heuristics. This is precisely where we observed JAX's XLA compiler failing.
+\textbf{Computational Profile}: ViT is \textit{memory-bound}. Self-attention has quadratic complexity in the number of tokens (197 for a 224x224 image),
+ leading to large intermediate activations. The attention mechanism involves multiple matrix multiplications with non-standard shapes, challenging compiler 
+ autotuning heuristics. This is precisely where we observed JAX's XLA compiler failing.
 
-\textbf{Why This Model}: Transformers represent the cutting edge of deep learning. They dominate NLP and are rapidly displacing CNNs in vision. However, their optimization is less mature. ViT stress-tests the framework's ability to handle: (1) non-convolutional operations, (2) dynamic memory allocation, (3) novel kernel fusion opportunities. It exposes compiler fragility.
+Transformers represent the cutting edge of deep learning. They dominate NLP and are rapidly displacing CNNs in vision. However,
+ their optimization is less mature. ViT stress-tests the framework's ability to handle: (1) non-convolutional operations, (2) dynamic memory allocation, 
+ (3) novel kernel fusion opportunities. It exposes compiler fragility.
 
 \begin{figure}[h]
     \centering
-    % \includegraphics[width=0.45\textwidth]{path/to/vit_arch.png}
-    \caption{Vision Transformer: Image patches processed via pure self-attention, no convolutions. (Placeholder)}
+    \includegraphics[width=0.45\textwidth]{vit_16.png}
+    \caption{Vision Transformer (ViT-Base) pipeline: image patch embedding and multi-head self-attention stacks \cite{dosovitskiy2020image}.}
     \label{fig:vit_arch}
 \end{figure}
 
 \subsubsection{MobileNetV3-Small: Efficiency at the Edge}
-\textbf{Architecture}: MobileNetV3-Small \cite{howard2019searching} is a lightweight CNN with only 2.5M parameters and 56 MFLOPs. It uses \textit{depthwise separable convolutions} (factorizing a standard convolution into depthwise and pointwise operations) and \textit{squeeze-and-excitation} modules for channel attention. It was designed via neural architecture search specifically for mobile/edge deployment.
+\textbf{Architecture}: MobileNetV3-Small \cite{howard2019searching} is a lightweight CNN with only 2.5M parameters and 56 MFLOPs. It uses 
+\textit{depthwise separable convolutions} (factorizing a standard convolution into depthwise and pointwise operations) and \textit{squeeze-and-excitation} 
+modules for channel attention. It was designed via neural architecture search specifically for mobile/edge deployment.
 
-\textbf{Computational Profile}: MobileNetV3 is \textit{latency-sensitive}. With such a small workload, framework overhead (kernel launch latency, host-device synchronization) dominates computation time. Poorly optimized frameworks will show disproportionate slowdown on this model.
+\textbf{Computational Profile}: MobileNetV3 is \textit{latency-sensitive}. With such a small workload, framework overhead (kernel launch latency, 
+host-device synchronization) dominates computation time. Poorly optimized frameworks will show disproportionate slowdown on this model.
 
-\textbf{Why This Model}: Mobile models represent the fastest-growing deployment target (edge AI, IoT). They test the framework's low-latency path. If JAX has high per-kernel overhead, it will fail here despite having excellent FLOPs utilization. This model also tests depthwise convolution optimization, which is notoriously difficult \cite{discuss2019depthwise}.
+Mobile models represent the fastest-growing deployment target (edge AI, IoT). They test the framework's low-latency path. 
+If JAX has high per-kernel overhead, it will fail here despite having excellent FLOPs utilization. This model also tests depthwise convolution 
+optimization, which is notoriously difficult \cite{discuss2019depthwise}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.45\textwidth]{mobilenetV3Block.png}
+    \caption{MobileNetV3 building block with depthwise separable convolution, SE, and hard-swish nonlinearity \cite{howard2019searching}.}
+    \label{fig:mobilenetv3_block}
+\end{figure}
 
 \subsubsection{EfficientNet-B0: Balanced Scaling}
-\textbf{Architecture}: EfficientNet-B0 \cite{tan2019efficientnet} is a 5.3M parameter CNN with 390 MFLOPs. It was derived via \textit{compound scaling}: simultaneously scaling depth, width, and resolution according to a principled formula. It uses mobile inverted bottleneck blocks (similar to MobileNet) but with carefully tuned expansion ratios.
+\textbf{Architecture}: EfficientNet-B0 \cite{tan2019efficientnet} is a 5.3M parameter CNN with 390 MFLOPs. It was derived via \textit{compound scaling}:
+ simultaneously scaling depth, width, and resolution according to a principled formula. It uses mobile inverted bottleneck blocks (similar to MobileNet)
+  but with carefully tuned expansion ratios.
 
-\textbf{Computational Profile}: EfficientNet represents a middle ground: larger than MobileNet, smaller than ResNet. It balances compute and memory access. It also uses non-standard activation functions (Swish/SiLU) which test framework support for custom ops.
+\textbf{Computational Profile}: EfficientNet represents a middle ground: larger than MobileNet, smaller than ResNet. It balances compute and memory access.
+ It also uses non-standard activation functions (Swish/SiLU) which test framework support for custom ops.
 
-\textbf{Why This Model}: EfficientNet represents the "optimized modern CNN" class. It achieves state-of-the-art accuracy-vs-FLOPs tradeoffs. It tests whether frameworks can efficiently handle: (1) irregular layer shapes (variable width/depth), (2) custom activations, (3) mixed precision opportunities. It's representative of production workloads in 2024.
+EfficientNet represents the "optimized modern CNN" class. It achieves state-of-the-art accuracy-vs-FLOPs tradeoffs. It tests whether
+ frameworks can efficiently handle: (1) irregular layer shapes (variable width/depth), (2) custom activations, (3) mixed precision opportunities.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.45\textwidth]{Efficientnet.png}
+    \caption{EfficientNet-B0 mobile inverted bottleneck block and compound scaling strategy \cite{tan2019efficientnet}.}
+    \label{fig:efficientnet_block}
+\end{figure}
 
 \subsection{Training Configuration}
 
@@ -113,52 +183,68 @@ We selected four architectures to represent fundamentally different design parad
     \item \textbf{JAX}: Trained \textit{from scratch} with random initialization (pre-trained Flax checkpoints unavailable for all models)
 \end{itemize}
 
-Consequently, PyTorch validation accuracies reflect fine-tuning performance, while JAX accuracies reflect 2-epoch learning from scratch. These results are \textit{not directly comparable} for accuracy metrics. However, they \textbf{are} comparable for throughput, energy, and memory consumption, which are our primary focus.
+Consequently, PyTorch validation accuracies reflect fine-tuning performance, while JAX accuracies reflect 2-epoch learning from scratch. These results 
+are \textit{not directly comparable} for accuracy metrics. However, they \textbf{are} comparable for throughput, energy, and memory consumption, which 
+are our primary focus.
 
 \subsubsection{The ViT Training Paradox}
 
 \textbf{Observation}: JAX ViT-Base has \textit{inference} results but no \textit{training} results, while PyTorch has both. This requires explanation.
 
-\textbf{Root Cause}: The XLA autotuning bug affects ViT during both inference and training. For inference, we bypassed it by disabling autotuning (\texttt{--xla\_gpu\_autotune\_level=0}), accepting slower performance. However, \textbf{training is fundamentally different}:
+\textbf{Root Cause}: The XLA autotuning bug affects ViT during both inference and training. For inference, we bypassed it by disabling autotuning 
+(\texttt{--xla\_gpu\_autotune\_level=0}), accepting slower performance. However, \textbf{training is fundamentally different}:
 
 \begin{enumerate}
-    \item \textbf{Backward Pass Complexity}: Training requires gradient computation through 12 transformer layers. This involves \textit{additional} attention operations with different tensor shapes (transposed queries/keys for backprop). XLA's autotuner fails on these shapes even when inference shapes work.
+    \item \textbf{Backward Pass Complexity}: Training requires gradient computation through 12 transformer layers. This involves \textit{additional} 
+    attention operations with different tensor shapes (transposed queries/keys for backprop). XLA's autotuner fails on these shapes even when inference
+     shapes work.
     
-    \item \textbf{Optimizer State}: Adam optimizer creates 2$\times$ the model parameters in momentum buffers (first and second moments). For ViT-Base (86M params), this means 258M floating-point values in optimizer state alone. The memory allocation patterns trigger XLA bugs that weren't hit during inference.
+    \item \textbf{Optimizer State}: Adam optimizer creates 2$\times$ the model parameters in momentum buffers (first and second moments). For ViT-Base 
+    (86M params), this means 258M floating-point values in optimizer state alone. The memory allocation patterns trigger XLA bugs that weren't 
+    hit during inference.
     
-    \item \textbf{Gradient Accumulation}: The backward pass creates a computational graph $3\times$ larger than forward pass (one graph per: forward, gradient computation, parameter update). XLA's compiler attempts to fuse operations across this massive graph, leading to illegal memory accesses.
+    \item \textbf{Gradient Accumulation}: The backward pass creates a computational graph $3\times$ larger than forward pass (one graph per: forward,
+     gradient computation, parameter update). XLA's compiler attempts to fuse operations across this massive graph, leading to illegal memory accesses.
 \end{enumerate}
 
-\textbf{Why Inference Worked}: Inference is a single forward pass with no optimizer state and predictable memory patterns. Disabling autotuning prevented XLA from selecting the buggy fused kernels.
+\textbf{Why Inference Worked}: Inference is a single forward pass with no optimizer state and predictable memory patterns. Disabling autotuning 
+prevented XLA from selecting the buggy fused kernels.
 
 \textbf{Potential Solutions}:
 \begin{itemize}
-    \item \textbf{JAX Downgrade}: Use JAX 0.4.13 (last known stable version for ViT on H100)
+    \item \textbf{JAX Downgrade}: Use JAX 0.4.13 
     \item \textbf{Gradient Checkpointing}: Re-compute activations during backward pass to reduce memory pressure
     \item \textbf{Mixed Precision (FP16)}: Reduces memory footprint and may avoid triggering the bug
     \item \textbf{Smaller Batch Sizes}: BS=8 or 16 might work where BS=32 fails
 \end{itemize}
 
-For this study, we chose \textit{not} to pursue ViT JAX training due to time constraints and the risk of introducing confounding variables (e.g., if only ViT uses FP16, fairness is compromised).
+For this study, we chose \textit{not} to pursue ViT JAX training due to time constraints and the risk of introducing confounding variables 
+(e.g., if only ViT uses FP16, fairness is compromised).
 
 \subsection{Benchmarking Protocol}
 
 \textbf{Measurement Tools}:
 \begin{itemize}
-    \item \textbf{Latency}: Measured using Python's \texttt{time.perf\_counter()} around the inference call. For PyTorch (GPU), we added \texttt{torch.cuda.synchronize()} before start and end timestamps to ensure accurate kernel timing. For JAX, we used \texttt{block\_until\_ready()} on the output tensor to force synchronization.
+    \item \textbf{Latency}: Measured using Python's \texttt{time.perf\_counter()} around the inference call. For PyTorch (GPU), we added 
+    \texttt{torch.cuda.synchronize()} before start and end timestamps to ensure accurate kernel timing. For JAX, we used \texttt{block\_until\_ready()} 
+    on the output tensor to force synchronization.
     \item \textbf{Memory}: 
         \begin{itemize}
             \item \textbf{PyTorch}: Tracked using \texttt{torch.cuda.max\_memory\_allocated()} reset before each batch.
-            \item \textbf{JAX}: Tracked using \texttt{jax.devices()[0].memory\_stats()['peak\_bytes\_in\_use']}. Note that JAX pre-allocates a large "virtual" memory pool (often 75-90\% of VRAM), so we specifically queried the \textit{used} bytes within that pool to get a fair comparison.
+            \item \textbf{JAX}: Tracked using \texttt{jax.devices()[0].memory\_stats()['peak\_bytes\_in\_use']}. Note that JAX pre-allocates a large 
+            "virtual" memory pool (often 75-90\% of VRAM), so we specifically queried the \textit{used} bytes within that pool to get a fair comparison.
         \end{itemize}
-    \item \textbf{Energy}: Monitored using the \texttt{pynvml} (NVIDIA Management Library) Python bindings to query instantaneous power draw (mW) at 100ms intervals during execution.
+    \item \textbf{Energy}: Monitored using the \texttt{pynvml} (NVIDIA Management Library) Python bindings to query instantaneous power draw 
+    (mW) at 100ms intervals during execution.
 \end{itemize}
 
 \textbf{Execution Loop}:
 For each configuration, we strictly followed this sequence:
-1. \textbf{Warmup}: 20 iterations of the model forward pass. This is critical to allow JAX's XLA compiler to trace and optimize the computation graph (JIT compilation) and for PyTorch's cuDNN autotuner to select optimal convolution algorithms.
+1. \textbf{Warmup}: 20 iterations of the model forward pass. This is critical to allow JAX's XLA compiler to trace and optimize the computation
+ graph (JIT compilation) and for PyTorch's cuDNN autotuner to select optimal convolution algorithms.
 2. \textbf{Measurement}: 100 iterations of inference. We recorded latency for every iteration to calculate p50, p95, and p99 statistics.
-3. \textbf{Cleanup}: Between configurations, we forced garbage collection (\texttt{gc.collect()}) and cleared framework caches (\texttt{torch.cuda.empty\_cache()}, \texttt{jax.clear\_caches()}) to prevent memory fragmentation artifacts.
+3. \textbf{Cleanup}: Between configurations, we forced garbage collection (\texttt{gc.collect()}) and cleared framework caches 
+(\texttt{torch.cuda.empty\_cache()}, \texttt{jax.clear\_caches()}) to prevent memory fragmentation artifacts.
 
 \textbf{Training}: PyTorch training for 5 epochs with:
 \begin{itemize}
@@ -171,7 +257,7 @@ For each configuration, we strictly followed this sequence:
 
 \subsection{Inference Performance}
 
-\input{../analysis/inference_summary.tex}
+\input{analysis/inference_summary.tex}
 
 Table \ref{tab:inference_summary} summarizes inference performance at maximum batch size (128). Key findings:
 
@@ -182,22 +268,28 @@ Table \ref{tab:inference_summary} summarizes inference performance at maximum ba
     \item EfficientNet-B0: 1.83$\times$ faster (16,510 vs 9,027 img/s)
 \end{itemize}
 
-\textbf{The ViT Anomaly}: For ViT-Base, JAX performance was 0.56$\times$ that of PyTorch (530 vs 946 img/s). This was a deliberate configuration choice: the default XLA autotuning caused \texttt{CUDA\_ERROR\_ILLEGAL\_ADDRESS} crashes on our H100 hardware. Disabling autotuning (\texttt{--xla\_gpu\_autotune\_level=0}) resolved the crash but prevented XLA from selecting optimized kernels, leading to suboptimal performance. This highlights a critical stability risk in JAX's compiler stack for newer architectures.
+\textbf{The ViT Anomaly}: For ViT-Base, JAX performance was 0.56$\times$ that of PyTorch (530 vs 946 img/s). This was a deliberate configuration 
+choice: the default XLA autotuning caused \texttt{CUDA\_ERROR\_ILLEGAL\_ADDRESS} crashes on our H100 hardware. Disabling autotuning 
+(\texttt{--xla\_gpu\_autotune\_level=0}) resolved the crash but prevented XLA from selecting optimized kernels, leading to suboptimal performance
+. This highlights a critical stability risk in JAX's compiler stack for newer architectures.
 
-\textbf{Latency}: JAX shows consistently lower latency for CNNs (e.g., ResNet-50: 10.79ms vs 21.45ms). However, ViT latency spiked to 241ms in JAX (vs 135ms in PyTorch) due to the unoptimized kernels.
+\textbf{Latency}: JAX shows consistently lower latency for CNNs (e.g., ResNet-50: 10.79ms vs 21.45ms). However, ViT latency spiked to 241ms in 
+JAX (vs 135ms in PyTorch) due to the unoptimized kernels.
 
-\textbf{Memory Usage}: Contrary to initial concerns about "75GB" memory usage (which proved to be total device capacity reporting), actual memory usage is comparable. JAX uses slightly more memory for CNNs (1.7GB vs 1.5GB for ResNet), but surprisingly \textit{less} for ViT (1.0GB vs 1.4GB) when autotuning is disabled, as no workspace memory is allocated for tuning.
+\textbf{Memory Usage}: Contrary to initial concerns about "75GB" memory usage (which proved to be total device capacity reporting), actual memory
+ usage is comparable. JAX uses slightly more memory for CNNs (1.7GB vs 1.5GB for ResNet), but surprisingly \textit{less} for ViT (1.0GB vs 1.4GB)
+  when autotuning is disabled, as no workspace memory is allocated for tuning.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.48\textwidth]{../analysis/resnet50_throughput.pdf}
+\includegraphics[width=0.48\textwidth]{analysis/resnet50_throughput.pdf}
 \caption{ResNet-50 throughput scaling with batch size. JAX maintains consistent 2$\times$ advantage across all batch sizes.}
 \label{fig:resnet50_throughput}
 \end{figure}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.48\textwidth]{../analysis/vit_b_16_throughput.pdf}
+\includegraphics[width=0.48\textwidth]{analysis/vit_b_16_throughput.pdf}
 \caption{ViT-Base throughput scaling. PyTorch outperforms JAX here due to the necessity of disabling XLA autotuning to prevent crashes.}
 \label{fig:vit_throughput}
 \end{figure}
@@ -206,9 +298,11 @@ Table \ref{tab:inference_summary} summarizes inference performance at maximum ba
 
 Figures \ref{fig:resnet50_throughput} and \ref{fig:vit_throughput} illustrate throughput scaling behavior:
 
-\textbf{ResNet-50}: Both frameworks scale well with batch size, but JAX maintains a consistent 2$\times$ advantage. This suggests compute-bound behavior where XLA's optimizations (fusion) provide consistent benefits.
+\textbf{ResNet-50}: Both frameworks scale well with batch size, but JAX maintains a consistent 2$\times$ advantage. This suggests compute-bound
+ behavior where XLA's optimizations (fusion) provide consistent benefits.
 
-\textbf{ViT-Base}: The scaling curve for JAX is flatter, indicating that without autotuning, the compiler fails to leverage parallelism effectively at larger batch sizes.
+\textbf{ViT-Base}: The scaling curve for JAX is flatter, indicating that without autotuning, the compiler fails to leverage parallelism effectively
+ at larger batch sizes.
 
 \subsection{Comparative Analysis}
 
@@ -216,51 +310,59 @@ Beyond line plots, we provide side-by-side comparisons to highlight framework di
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.48\textwidth]{../analysis/throughput_comparison.pdf}
-\caption{Framework throughput comparison across all models at batch size 128. JAX shows consistent advantages for CNNs but lags on ViT due to disabled autotuning.}
+\includegraphics[width=0.48\textwidth]{analysis/throughput_comparison.pdf}
+\caption{Framework throughput comparison across all models at batch size 128. JAX shows consistent advantages for CNNs but lags on ViT due to 
+disabled autotuning.}
 \label{fig:throughput_bar}
 \end{figure}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.48\textwidth]{../analysis/memory_comparison.pdf}
+\includegraphics[width=0.48\textwidth]{analysis/memory_comparison.pdf}
 \caption{Memory usage comparison at batch size 128. JAX generally uses more memory for inference, except for ViT where autotuning is disabled.}
 \label{fig:memory_bar}
 \end{figure}
 
-Figure \ref{fig:throughput_bar} provides a bar chart comparison of throughput across all models, making the magnitude of JAX's advantage (and ViT disadvantage) immediately apparent. Figure \ref{fig:memory_bar} shows memory usage patterns: JAX trades memory for speed in most cases.
+Figure \ref{fig:throughput_bar} provides a bar chart comparison of throughput across all models, making the magnitude of JAX's advantage 
+(and ViT disadvantage) immediately apparent. Figure \ref{fig:memory_bar} shows memory usage patterns: JAX trades memory for speed in most cases.
 
 \subsection{Training Performance}
 
 Training results are presented in the appendix (Table \ref{tab:training_summary}). Key observations from PyTorch and JAX training:
 
-\textbf{Accuracy vs Model Size}: ResNet-50 achieves robust validation accuracy ($\sim$65\% top-1 at epoch 2 from scratch for JAX), demonstrating its reliability as a baseline. PyTorch shows higher accuracies due to pre-training.
+\textbf{Accuracy vs Model Size}: ResNet-50 achieves robust validation accuracy ($\sim$65\% top-1 at epoch 2 from scratch for JAX), demonstrating 
+its reliability as a baseline. PyTorch shows higher accuracies due to pre-training.
 
-\textbf{Training Speed}: MobileNetV3-Small trains fastest ($\sim$95s/epoch) due to its compact architecture. ViT-Base is slowest ($\sim$420s/epoch), reflecting its larger parameter count and computational complexity.
+\textbf{Training Speed}: MobileNetV3-Small trains fastest ($\sim$95s/epoch) due to its compact architecture. ViT-Base is slowest ($\sim$420s/epoch),
+ reflecting its larger parameter count and computational complexity.
 
-\textbf{Energy Efficiency}: MobileNetV3-Small is most energy-efficient, while ViT-Base consumes significantly more power, highlighting the energy cost of transformer architectures.
+\textbf{Energy Efficiency}: MobileNetV3-Small is most energy-efficient, while ViT-Base consumes significantly more power, highlighting the energy 
+cost of transformer architectures.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.48\textwidth]{../analysis/energy_comparison.pdf}
+\includegraphics[width=0.48\textwidth]{analysis/energy_comparison.pdf}
 \caption{Training energy consumption comparison at batch size 32. MobileNetV3 is most efficient; ViT consumes nearly 20x more energy per epoch.}
 \label{fig:energy_bar}
 \end{figure}
 
-Figure \ref{fig:energy_bar} quantifies the energy cost differences between architectures. This is critical for deployment decisions where power consumption impacts operational costs and environmental footprint.
+Figure \ref{fig:energy_bar} quantifies the energy cost differences between architectures. This is critical for deployment decisions where power 
+consumption impacts operational costs and environmental footprint.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.48\textwidth]{../analysis/resnet50_training_accuracy.pdf}
+\includegraphics[width=0.48\textwidth]{analysis/resnet50_training_accuracy.pdf}
 \caption{ResNet-50 training curves across batch sizes. Larger batches converge faster but show similar final accuracy.}
 \label{fig:resnet50_training}
 \end{figure}
 
 \subsection{Architecture-Specific Insights}
 
-\textbf{CNNs (ResNet-50, EfficientNet-B0)}: JAX provides 1.5-2.0$\times$ speedup. These models are mature and well-supported by XLA's default heuristics.
+\textbf{CNNs (ResNet-50, EfficientNet-B0)}: JAX provides 1.5-2.0$\times$ speedup. These models are mature and well-supported by XLA's default
+ heuristics.
 
-\textbf{Transformers (ViT-Base)}: Transformers represent a "high risk, high reward" zone for JAX. While potential speedups are high (as seen in other studies), compiler instability can force users into "safe modes" that degrade performance below PyTorch levels.
+\textbf{Transformers (ViT-Base)}: Transformers represent a "high risk, high reward" zone for JAX. While potential speedups are high 
+(as seen in other studies \cite{papa2024efficient,han2023survey}), compiler instability can force users into "safe modes" that degrade performance below PyTorch levels.
 
 \section{Discussion}
 
@@ -275,22 +377,23 @@ Figure \ref{fig:energy_bar} quantifies the energy cost differences between archi
 
 \textbf{Choose PyTorch when}:
 \begin{itemize}
-    \item Stability and "out-of-the-box" reliability are paramount
-    \item Working with bleeding-edge or complex transformer architectures that might trigger compiler bugs
+    \item Stability and "out-of-the-box" reliability are a must
+    \item Working with  complex transformer architectures that might trigger compiler bugs
     \item Memory constraints are tight (PyTorch generally manages memory more aggressively)
 \end{itemize}
 
 \subsection{Hardware-Software Co-Design Implications}
 
-\textbf{Compiler Robustness}: The ViT crash highlights that the compiler (XLA) is a critical component of the HW-SW stack. Hardware vendors must ensure their compiler stacks are robust across all supported architectures, not just CNNs.
+\textbf{Compiler Robustness}: Even though JAX with XLA works for most operations, we observed cases where the compiler fails on specific hardware/configurations (e.g., \texttt{CUDA\_ERROR\_ILLEGAL\_ADDRESS}). This makes compiler stability a critical part of the HW–SW stack, especially for newer architectures beyond CNNs.
 
-\textbf{Memory Hierarchy}: JAX's memory usage patterns (pre-allocation) suggest that systems designed for JAX should account for higher peak memory reservation, even if actual usage is lower.
+\textbf{Memory Hierarchy}: JAX's memory usage patterns (pre-allocation) suggest that systems designed for JAX should account for higher 
+peak memory reservation, even if actual usage is lower.
 
 \subsection{Limitations}
 
 \begin{itemize}
     \item JAX training benchmarks were limited to CNNs due to the same stability issues affecting ViT.
-    \item TPU evaluation was not performed due to resource constraints.
+    \item CPU-only baselines and TPU evaluation were planned but not completed due to time and resource constraints.
     \item Energy measurements are GPU-only.
 \end{itemize}
 
@@ -306,33 +409,6 @@ This work provides a comprehensive comparison of JAX and PyTorch. Our key findin
 \end{enumerate}
 
 Future work includes completing JAX training benchmarks, extending to TPU evaluation, and analyzing multi-GPU scaling behavior.
-
-\appendix
-
-\section{Complete Benchmark Results}
-
-This appendix presents comprehensive results for all benchmark configurations executed in this study.
-
-\subsection{Inference Results}
-
-Table \ref{tab:inference_full} contains complete inference benchmark results for all 32 configurations: 4 models $\times$ 2 frameworks $\times$ 4 batch sizes. Each configuration was measured over 100 iterations after 20 warmup iterations on NVIDIA H100 NVL GPU.
-
-\input{../analysis/inference_full.tex}
-
-\subsection{Training Results}
-
-\subsubsection{Training Summary}
-
-Table \ref{tab:training_summary} presents a summary of training performance for the final epoch across all models and batch sizes.
-
-\input{../analysis/training_summary.tex}
-
-\subsubsection{Complete Training Details}
-
-Table \ref{tab:training_full} presents complete PyTorch and JAX training results for all configurations: 3 models $\times$ 2 frameworks $\times$ 3 batch sizes. Results show final epoch (epoch 2) performance. PyTorch models were fine-tuned from ImageNet pre-trained weights, while JAX models were trained from scratch.
-
-\input{../analysis/training_full.tex}
-
 
 \begin{thebibliography}{00}
     \bibitem{mlperf2020} P. Mattson et al., ``MLPerf Training Benchmark,'' in \textit{Proc. Machine Learning and Systems (MLSys)}, vol. 2, pp. 336-349, 2020.
@@ -359,5 +435,34 @@ Table \ref{tab:training_full} presents complete PyTorch and JAX training results
     
     \bibitem{han2023survey} K. Han et al., ``A Survey on Vision Transformer,'' \textit{IEEE TPAMI}, vol. 45, no. 1, pp. 87-110, 2023.
 \end{thebibliography}
+
+\appendix
+
+\section{Complete Benchmark Results}
+
+This appendix presents comprehensive results for all benchmark configurations executed in this study.
+
+\subsection{Inference Results}
+
+Table \ref{tab:inference_full} contains complete inference benchmark results for all 32 configurations: 4 models $\times$ 2 frameworks $\times$
+ 4 batch sizes. Each configuration was measured over 100 iterations after 20 warmup iterations on NVIDIA H100 NVL GPU.
+
+\input{analysis/inference_full.tex}
+
+\subsection{Training Results}
+
+\subsubsection{Training Summary}
+
+Table \ref{tab:training_summary} presents a summary of training performance for the final epoch across all models and batch sizes.
+
+\input{analysis/training_summary.tex}
+
+\subsubsection{Complete Training Details}
+
+Table \ref{tab:training_full} reports complete PyTorch and JAX training results across all configurations: 3 models $\times$ 2 frameworks $\times$ 
+3 batch sizes. We show final-epoch (epoch 2) performance with training loss, validation top-1/top-5 accuracy, epoch time, and energy. PyTorch models
+ were fine-tuned from ImageNet pre-trained weights; JAX models were trained from scratch.
+
+\input{analysis/training_full.tex}
 
 \end{document}
