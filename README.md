@@ -180,7 +180,7 @@ export XLA_FLAGS="--xla_gpu_autotune_level=0"
 
 ## Author
 
-**Lucas Takanori Sanchez** (Primary Author - 95% of work)
+**Lucas Takanori Sanchez** (Primary Author - 80% of work)
 - Research proposal and experimental design
 - Complete implementation of benchmarking infrastructure
 - Training and inference framework development
@@ -195,8 +195,8 @@ Contact: lsanc68@uic.edu
 ## Contributors
 
 - **Shashwat Sinha** - Initial primitive version and Phase 1-2 setup ([original repo](https://github.com/shashsinha8/594Project))
-- **Prathyush Balla** - Presentation support
-- **Sai Madhav Badri** - Presentation support
+- **Prathyush Balla** - Presentation support / Visualization
+- **Sai Madhav Badri** - Presentation support / Visualization
 
 ## Citation
 
